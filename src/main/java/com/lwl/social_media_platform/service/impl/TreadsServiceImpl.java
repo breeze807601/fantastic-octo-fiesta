@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
 import com.lwl.social_media_platform.mapper.TreadsMapper;
-import com.lwl.social_media_platform.mapper.TreadsTagMapper;
 import com.lwl.social_media_platform.pojo.Tag;
 import com.lwl.social_media_platform.pojo.Treads;
 import com.lwl.social_media_platform.pojo.TreadsTag;
@@ -35,7 +34,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     public Result<String> publish(TreadsDTO treadsDTO) {
         Long userId = BaseContext.getCurrentId();
 
-        treadsDTO.setUserId(1L);
+        treadsDTO.setUserId(userId);
 
         treadsDTO.setCreateTime(LocalDateTime.now());
 
@@ -47,7 +46,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 设置动态id
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
         if (CollUtil.isNotEmpty(treadsTagList)) {
-            treadsTagList.stream().map(item -> item.setTreadId(treadsId)).collect(Collectors.toList());
+            treadsTagList.stream().map(item -> item.setTreadsId(treadsId)).collect(Collectors.toList());
 
             treadsTagServicet.saveBatch(treadsTagList);
         }
@@ -61,7 +60,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 删除动态
         this.remove(new LambdaQueryWrapper<Treads>().eq(Treads::getId,id));
         // 删除动态相关标签
-        treadsTagServicet.remove(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadId,id));
+        treadsTagServicet.remove(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId,id));
         return Result.success("删除成功");
     }
 
@@ -71,7 +70,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         Treads treads = this.getById(id);
 
         // 获取该动态的标签id
-        List<TreadsTag> treadsTags = treadsTagServicet.list(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadId, id));
+        List<TreadsTag> treadsTags = treadsTagServicet.list(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId, id));
         // 去除标签id
         List<Long> tagsId = treadsTags.stream().map(TreadsTag::getTagId).toList();
         // 根据id获取标签内容
@@ -97,12 +96,12 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         this.update(updateWrapper.eq(Treads::getId,treadsId));
 
         // 删除该动态的标签
-        treadsTagServicet.remove(queryWrapper.eq(TreadsTag::getTreadId,treadsId));
+        treadsTagServicet.remove(queryWrapper.eq(TreadsTag::getTreadsId,treadsId));
 
         // 获取该动态的新标签
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
         // 设置动态id
-        treadsTagList.stream().map(item -> item.setTreadId(treadsId)).collect(Collectors.toList());
+        treadsTagList.stream().map(item -> item.setTreadsId(treadsId)).collect(Collectors.toList());
         // 保存新标签
         treadsTagServicet.saveBatch(treadsTagList);
 
