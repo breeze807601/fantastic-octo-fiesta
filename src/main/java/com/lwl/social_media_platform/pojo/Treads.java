@@ -10,8 +10,8 @@ public class Treads {
     private Long id;
     private Long userId;
     private String content;
-    private Integer support_count;
-    private Integer tread_count;
+//    private Integer supportCount;
+//    private Integer treadCount;
     private String state;
     private LocalDateTime createTime;
 }
