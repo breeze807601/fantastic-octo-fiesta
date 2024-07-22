@@ -1,8 +1,5 @@
 package com.lwl.social_media_platform.controller;
 
-import com.lwl.social_media_platform.common.Result;
-import com.lwl.social_media_platform.pojo.dto.TreadsDTO;
-import com.lwl.social_media_platform.service.TreadsService;
 import com.lwl.social_media_platform.utils.AliOSSUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,15 +12,11 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/tread")
-public class TreadsController {
-    private final TreadsService treadsService;
-
-
-    @PostMapping
-    public Result<String> publish(@RequestBody TreadsDTO treadsDTO){
-        return treadsService.publish(treadsDTO);
+@RequestMapping("/common")
+public class CommonController {
+    private final AliOSSUtils aliOSSUtils;
+    @PostMapping("/image")
+    public void saveImage(@RequestBody MultipartFile multipartFile) throws IOException {
+        aliOSSUtils.upload(multipartFile);
     }
-
-
 }
