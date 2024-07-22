@@ -18,7 +18,7 @@ import java.util.Map;
 public class UserController {
     @Autowired
     private UserService userService;
-    @PostMapping("login")
+    @PostMapping("/login")
     public Result<UserLoginVo> login(String username, String password) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
@@ -40,8 +40,10 @@ public class UserController {
 
         return Result.success(userLoginVo);
     }
-    @PostMapping("register")
+    @PostMapping("/register")
     public Result register(@RequestBody User user) {
+        // 默认头像
+        user.setPic("https://homework1015.oss-cn-beijing.aliyuncs.com/pic.png");
         userService.save(user);
         return Result.success(user);
     }
