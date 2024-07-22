@@ -7,6 +7,6 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class TreadsTag {
     private Long id;
-    private Long treadId;
+    private Long treadsId;
     private Long tagId;
 }
