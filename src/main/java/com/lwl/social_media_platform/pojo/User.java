@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class User {
     private Long id;
     private String username;
+    private String pic;
     private String password;
     private String nickname;
     private String sex;
