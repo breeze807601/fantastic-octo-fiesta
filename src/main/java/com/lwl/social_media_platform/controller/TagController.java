@@ -22,4 +22,9 @@ public class TagController {
     public Result<List<Tag>> getTag(){
         return tagService.getTagList();
     }
+
+    @DeleteMapping("/delete")
+    public Result<String> deleteTag(@RequestParam("/id") Long id){
+        return tagService.deleteTag(id);
+    }
 }

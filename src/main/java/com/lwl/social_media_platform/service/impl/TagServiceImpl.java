@@ -21,4 +21,10 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         this.save(tag);
         return Result.success(tag);
     }
+
+    @Override
+    public Result<String> deleteTag(Long id) {
+        this.removeById(id);
+        return Result.success("删除标签成功");
+    }
 }
