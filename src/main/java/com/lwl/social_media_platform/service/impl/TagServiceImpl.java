@@ -17,8 +17,14 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     }
 
     @Override
-    public Result<String> saveTag(Tag tag) {
+    public Result<Tag> saveTag(Tag tag) {
         this.save(tag);
-        return Result.success("添加成功");
+        return Result.success(tag);
+    }
+
+    @Override
+    public Result<String> deleteTag(Long id) {
+        this.removeById(id);
+        return Result.success("删除标签成功");
     }
 }
