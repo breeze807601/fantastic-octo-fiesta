@@ -17,8 +17,8 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     }
 
     @Override
-    public Result<String> saveTag(Tag tag) {
+    public Result<Tag> saveTag(Tag tag) {
         this.save(tag);
-        return Result.success("添加成功");
+        return Result.success(tag);
     }
 }

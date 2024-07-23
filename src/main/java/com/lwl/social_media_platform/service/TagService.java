@@ -10,5 +10,5 @@ public interface TagService extends IService<Tag> {
 
     Result<List<Tag>> getTagList();
 
-    Result<String> saveTag(Tag tag);
+    Result<Tag> saveTag(Tag tag);
 }

@@ -14,7 +14,7 @@ import java.util.List;
 public class TagController {
     private final TagService tagService;
     @PostMapping
-    public Result<String> saveTag(@RequestBody Tag tag){
+    public Result<Tag> saveTag(@RequestBody Tag tag){
         return tagService.saveTag(tag);
     }
 
