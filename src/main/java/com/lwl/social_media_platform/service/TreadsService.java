@@ -9,7 +9,7 @@ import com.lwl.social_media_platform.pojo.vo.TreadsVo;
 public interface TreadsService extends IService<Treads> {
     Result<String> publish(TreadsDTO treadsDTO);
 
-    Result<String> delete(Long id);
+    Result<String> deleteTread(Long id);
 
     Result<TreadsVo> getTread(Long id);
 

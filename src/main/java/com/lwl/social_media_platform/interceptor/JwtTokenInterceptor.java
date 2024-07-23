@@ -32,7 +32,8 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         // 校验令牌
         try {
             // 获取id
-            Long id = JWTUtil.verify(token).getClaim("id").asLong();
+            String idStr = JWTUtil.verify(token).getClaim("id").asString();
+            long id = Long.parseLong(idStr);
             BaseContext.setCurrentId(id);
             // 通过，放行
             return true;
