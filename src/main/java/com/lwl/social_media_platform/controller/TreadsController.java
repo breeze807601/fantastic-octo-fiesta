@@ -1,11 +1,14 @@
 package com.lwl.social_media_platform.controller;
 
+import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
-import com.lwl.social_media_platform.pojo.dto.TreadsDTO;
-import com.lwl.social_media_platform.pojo.vo.TreadsVo;
+import com.lwl.social_media_platform.domain.dto.TreadsDTO;
+import com.lwl.social_media_platform.domain.vo.TreadsVo;
 import com.lwl.social_media_platform.service.TreadsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,5 +34,16 @@ public class TreadsController {
     @PostMapping("/update")
     public Result<String> updateTread(@RequestBody TreadsDTO treadsDTO){
         return treadsService.updateTread(treadsDTO);
+    }
+
+    @GetMapping("/list")
+    public Result<List<TreadsVo>> getTreadsList(@RequestParam("id") Long userId){
+        return treadsService.getTreadsList(userId);
+    }
+
+    @GetMapping("/my-list")
+    public Result<List<TreadsVo>> getMyTreadsList(){
+        Long userId = BaseContext.getCurrentId();
+        return getTreadsList(userId);
     }
 }

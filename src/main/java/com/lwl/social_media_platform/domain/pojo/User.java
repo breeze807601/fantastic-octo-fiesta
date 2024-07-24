@@ -1,4 +1,4 @@
-package com.lwl.social_media_platform.pojo;
+package com.lwl.social_media_platform.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

@@ -1,4 +1,4 @@
-package com.lwl.social_media_platform.pojo;
+package com.lwl.social_media_platform.domain.pojo;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

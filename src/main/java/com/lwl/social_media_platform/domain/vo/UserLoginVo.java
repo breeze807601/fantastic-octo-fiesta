@@ -1,6 +1,6 @@
-package com.lwl.social_media_platform.pojo.vo;
+package com.lwl.social_media_platform.domain.vo;
 
-import com.lwl.social_media_platform.pojo.User;
+import com.lwl.social_media_platform.domain.pojo.User;
 import lombok.Data;
 @Data
 public class UserLoginVo {
