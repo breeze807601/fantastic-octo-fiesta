@@ -1,7 +1,7 @@
 package com.lwl.social_media_platform.controller;
 
 import com.lwl.social_media_platform.common.Result;
-import com.lwl.social_media_platform.pojo.Tag;
+import com.lwl.social_media_platform.domain.pojo.Tag;
 import com.lwl.social_media_platform.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

@@ -7,17 +7,11 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
+import com.lwl.social_media_platform.domain.pojo.*;
 import com.lwl.social_media_platform.mapper.TreadsMapper;
-import com.lwl.social_media_platform.pojo.Image;
-import com.lwl.social_media_platform.pojo.Tag;
-import com.lwl.social_media_platform.pojo.Treads;
-import com.lwl.social_media_platform.pojo.TreadsTag;
-import com.lwl.social_media_platform.pojo.dto.TreadsDTO;
-import com.lwl.social_media_platform.pojo.vo.TreadsVo;
-import com.lwl.social_media_platform.service.ImageService;
-import com.lwl.social_media_platform.service.TagService;
-import com.lwl.social_media_platform.service.TreadsService;
-import com.lwl.social_media_platform.service.TreadsTagService;
+import com.lwl.social_media_platform.domain.dto.TreadsDTO;
+import com.lwl.social_media_platform.domain.vo.TreadsVo;
+import com.lwl.social_media_platform.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +24,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> implements TreadsService {
     private final TagService tagService;
-    private final TreadsTagService treadsTagServicet;
+    private final TreadsTagService treadsTagService;
     private final ImageService imageService;
+    private final ConcentrationService concentrationService;
     @Override
     @Transactional
     public Result<String> publish(TreadsDTO treadsDTO) {
@@ -51,7 +46,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         if (CollUtil.isNotEmpty(treadsTagList)) {
             treadsTagList.stream().map(item -> item.setTreadsId(treadsId)).collect(Collectors.toList());
             // 保存标签
-            treadsTagServicet.saveBatch(treadsTagList);
+            treadsTagService.saveBatch(treadsTagList);
         }
 
         // 为 图片列表 设置动态id
@@ -72,7 +67,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         this.removeById(id);
 
         // 删除动态相关标签
-        treadsTagServicet.remove(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId,id));
+        treadsTagService.remove(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId,id));
         // 删除动态相关图片
         imageService.remove(new LambdaQueryWrapper<Image>().eq(Image::getTreadsId,id));
 
@@ -81,11 +76,13 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
     @Override
     public Result<TreadsVo> getTread(Long id) {
+        Long userId = BaseContext.getCurrentId();
+
         // 获取动态
         Treads treads = this.getById(id);
 
         // 获取该动态的标签id
-        List<TreadsTag> treadsTags = treadsTagServicet.list(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId, id));
+        List<TreadsTag> treadsTags = treadsTagService.list(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId, id));
         // 去除标签id
         List<Long> tagsId = treadsTags.stream().map(TreadsTag::getTagId).toList();
         // 根据id获取标签内容
@@ -94,12 +91,21 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 获取图片url
         List<Image> imageList = imageService.list(new LambdaQueryWrapper<Image>().eq(Image::getTreadsId, id));
 
+        // 是否关注
+        Concentration concentration = concentrationService.getOne(
+                new LambdaQueryWrapper<Concentration>()
+                .eq(Concentration::getUserId, userId)
+                .eq(Concentration::getToUserId, treads.getUserId())
+        );
+
         // 转换为vo
         TreadsVo treadsVo = BeanUtil.copyProperties(treads, TreadsVo.class);
         // 设置标签
         treadsVo.setTagList(tags);
         // 设置图片url
         treadsVo.setImageList(imageList);
+        // 是否关注
+        treadsVo.setIsFollow(concentration != null);
 
         return Result.success(treadsVo);
     }
@@ -116,7 +122,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         this.update(updateWrapper.eq(Treads::getId,treadsId));
 
         // 删除该动态的标签
-        treadsTagServicet.remove(queryWrapper.eq(TreadsTag::getTreadsId,treadsId));
+        treadsTagService.remove(queryWrapper.eq(TreadsTag::getTreadsId,treadsId));
 
         // 获取该动态的新标签
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
@@ -124,7 +130,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         treadsTagList.stream().map(item -> item.setTreadsId(treadsId)).collect(Collectors.toList());
 
         // 保存新标签
-        treadsTagServicet.saveBatch(treadsTagList);
+        treadsTagService.saveBatch(treadsTagList);
 
         return Result.success("更新成功");
     }

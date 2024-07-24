@@ -2,8 +2,8 @@ package com.lwl.social_media_platform.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lwl.social_media_platform.common.Result;
-import com.lwl.social_media_platform.pojo.User;
-import com.lwl.social_media_platform.pojo.vo.UserLoginVo;
+import com.lwl.social_media_platform.domain.pojo.User;
+import com.lwl.social_media_platform.domain.vo.UserLoginVo;
 import com.lwl.social_media_platform.service.UserService;
 import com.lwl.social_media_platform.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
