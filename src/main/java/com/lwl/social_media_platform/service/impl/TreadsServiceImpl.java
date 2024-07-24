@@ -34,6 +34,12 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     public Result<String> publish(TreadsDTO treadsDTO) {
         Long userId = BaseContext.getCurrentId();
 
+        treadsDTO.setContent(
+                treadsDTO.getContent()
+                        .replace("\n", "<br/>")
+                        .replace("\r", "")
+        );
+
         treadsDTO.setUserId(userId);
 
         treadsDTO.setCreateTime(LocalDateTime.now());
