@@ -25,8 +25,13 @@ public class ConcentrationServiceImpl extends ServiceImpl<ConcentrationMapper, C
     }
 
     @Override
-    public Result<String> cancelConcentration(Long id) {
-        this.removeById(id);
+    public Result<String> cancelConcentration(Long toUserId) {
+        Long userId = BaseContext.getCurrentId();
+        this.remove(
+                new LambdaQueryWrapper<Concentration>()
+                        .eq(Concentration::getToUserId,toUserId)
+                        .eq(Concentration::getUserId,userId)
+        );
         return Result.success("取消关注成功");
     }
 
