@@ -10,15 +10,19 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class PageQuery {
-    public static final Integer DEFAULT_PAGE_SIZE = 20;
+    public static final Integer DEFAULT_PAGE_SIZE = 10;
     public static final Integer DEFAULT_PAGE_NUM = 1;
 
+    // 页数
     private Integer pageNo = DEFAULT_PAGE_NUM;
 
+    // 页大小
     private Integer pageSize = DEFAULT_PAGE_SIZE;
 
+    // 是否倒序排列
     private Boolean isAsc = true;
 
+    // 排序方式
     private String sortBy;
 
     public int from(){

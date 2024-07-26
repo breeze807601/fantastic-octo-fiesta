@@ -2,16 +2,22 @@ package com.lwl.social_media_platform.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.PageUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
+import com.lwl.social_media_platform.domain.dto.PageDTO;
 import com.lwl.social_media_platform.domain.pojo.*;
+import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
 import com.lwl.social_media_platform.mapper.TreadsMapper;
 import com.lwl.social_media_platform.domain.dto.TreadsDTO;
 import com.lwl.social_media_platform.domain.vo.TreadsVo;
 import com.lwl.social_media_platform.service.*;
+import com.lwl.social_media_platform.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +35,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     private final ImageService imageService;
     private final ConcentrationService concentrationService;
     private final SupportService supportService;
+    private final UserService userService;
     @Override
     @Transactional
     public Result<String> publish(TreadsDTO treadsDTO) {
@@ -95,8 +102,14 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     @Override
     public Result<List<TreadsVo>> getTreadsList(Long userId) {
 
+        List<Treads> treadsList;
+
         // 获取动态
-        List<Treads> treadsList = this.list(new LambdaQueryWrapper<Treads>().eq(Treads::getUserId, userId));
+        if (userId == null) {
+            treadsList =  this.list();
+        }else {
+            treadsList = this.list(new LambdaQueryWrapper<Treads>().eq(Treads::getUserId, userId));
+        }
 
         // 将每个 Treads 转换成 TreadsVo
         List<TreadsVo> treadsVoList = treadsList.stream()
@@ -104,6 +117,20 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
                 .toList();
 
         return Result.success(treadsVoList);
+    }
+
+    @Override
+    public Result<PageDTO<TreadsVo>> getTreadsPage(TreadsPageQuery treadsPageQuery) {
+        Page<Treads> treadsPage = this.lambdaQuery()
+                .like(StrUtil.isNotEmpty(treadsPageQuery.getKey()), Treads::getContent, treadsPageQuery.getKey())
+                .page(treadsPageQuery.toMpPageDefaultSortByCreateTimeDesc());
+
+        List<Treads> records = treadsPage.getRecords();
+        List<TreadsVo> treadsVos = records.stream()
+                .map(item -> getTreadsVo(item.getId()))
+                .toList();
+
+        return Result.success(PageUtils.of(treadsPage,treadsVos));
     }
 
     @Override
@@ -119,7 +146,6 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         // 删除该动态的标签
         treadsTagService.remove(queryWrapper.eq(TreadsTag::getTreadsId,treadsId));
-
 
         // 获取该动态的新标签
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
@@ -143,7 +169,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
      * @return treadsVo
      */
     private TreadsVo getTreadsVo(Long id){
-        Long userId = BaseContext.getCurrentId();
+        long userId = BaseContext.getCurrentId();
 
         // 获取动态
         Treads treads = this.getById(id);
@@ -163,12 +189,17 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 获取图片url
         List<Image> imageList = imageService.list(new LambdaQueryWrapper<Image>().eq(Image::getTreadsId, id));
 
+        // 获取动态作者id
+        long toUserId = treads.getUserId();
         // 是否关注
         Concentration concentration = concentrationService.getOne(
                 new LambdaQueryWrapper<Concentration>()
                         .eq(Concentration::getUserId, userId)
-                        .eq(Concentration::getToUserId, treads.getUserId())
+                        .eq(Concentration::getToUserId, toUserId)
         );
+
+        // 获取动态作者
+        User user = userService.getById(toUserId);
 
         // 获取点赞数
         long supportNum = supportService.count(new LambdaQueryWrapper<Support>().eq(Support::getTreadsId, id));
@@ -179,7 +210,9 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         treadsVo.setTagList(tags)
                 .setImageList(imageList)
                 .setIsFollow(concentration != null)
-                .setSupportNum(supportNum);
+                .setSupportNum(supportNum)
+                .setNickName(user.getUsername())
+                .setPic(user.getPic());
 
         return treadsVo;
     }

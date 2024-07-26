@@ -14,6 +14,4 @@ public class PageDTO<T> {
     protected Long total;
     protected Long pages;
     protected List<T> list;
-
-
 }
