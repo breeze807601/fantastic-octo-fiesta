@@ -2,7 +2,9 @@ package com.lwl.social_media_platform.controller;
 
 import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
+import com.lwl.social_media_platform.domain.dto.PageDTO;
 import com.lwl.social_media_platform.domain.dto.TreadsDTO;
+import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
 import com.lwl.social_media_platform.domain.vo.TreadsVo;
 import com.lwl.social_media_platform.service.TreadsService;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +39,18 @@ public class TreadsController {
     }
 
     @GetMapping("/list")
-    public Result<List<TreadsVo>> getTreadsList(@RequestParam("id") Long userId){
+    public Result<List<TreadsVo>> getTreadsList(@RequestParam(name="id",required = false) Long userId){
         return treadsService.getTreadsList(userId);
+    }
+
+    /**
+     * 返回 动态 分页
+     * @param treadsPageQuery
+     * @return
+     */
+    @GetMapping("/page")
+    public Result<PageDTO<TreadsVo>> getTreadsPage(TreadsPageQuery treadsPageQuery){
+        return treadsService.getTreadsPage(treadsPageQuery);
     }
 
     @GetMapping("/my-list")
