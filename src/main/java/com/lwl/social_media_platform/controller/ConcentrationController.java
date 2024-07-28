@@ -14,13 +14,13 @@ public class ConcentrationController {
     private final ConcentrationService concentrationService;
 
     @PostMapping
-    public Result<String> follow(Concentration concentration){
+    public Result<String> follow(@RequestBody Concentration concentration){
         return concentrationService.saveConcentration(concentration);
     }
 
     @DeleteMapping("/cancel")
-    public Result<String> cancel(@RequestParam("id") Long id){
-        return concentrationService.cancelConcentration(id);
+    public Result<String> cancel(@RequestParam("toUserId") Long toUserId){
+        return concentrationService.cancelConcentration(toUserId);
     }
 
     @GetMapping("get")

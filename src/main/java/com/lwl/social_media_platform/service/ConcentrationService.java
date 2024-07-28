@@ -9,7 +9,7 @@ public interface ConcentrationService extends IService<Concentration> {
 
     Result<String> saveConcentration(Concentration concentration);
 
-    Result<String> cancelConcentration(Long id);
+    Result<String> cancelConcentration(Long toUserId);
 
     Result<Page<Concentration>> getFollow(int page,int pageSize);
 }

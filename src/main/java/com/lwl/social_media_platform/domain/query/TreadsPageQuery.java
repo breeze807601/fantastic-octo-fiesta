@@ -9,6 +9,6 @@ public class TreadsPageQuery extends PageQuery{
     // 关键字
     private String key;
 
-    // 用户界面下搜索动态时，携带id
+    // 根据用户查询
     private Long userId;
 }
