@@ -4,20 +4,31 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
-import com.lwl.social_media_platform.mapper.CommentMapper;
 import com.lwl.social_media_platform.domain.pojo.Comment;
+import com.lwl.social_media_platform.domain.pojo.User;
+import com.lwl.social_media_platform.mapper.CommentMapper;
 import com.lwl.social_media_platform.service.CommentService;
+import com.lwl.social_media_platform.service.UserService;
+import com.lwl.social_media_platform.utils.CollUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
+    private final UserService userService;
     @Override
     public Result<Comment> saveComment(Comment comment) {
         Long userId = BaseContext.getCurrentId();
+        User user = userService.getById(userId);
         comment.setUserId(userId)
+                .setNickName(user.getNickname())
                 .setCreateTime(LocalDateTime.now());
         this.save(comment);
         return Result.success(comment);
@@ -25,13 +36,57 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public Result<String> deleteComment(Long id) {
-        Long userId = BaseContext.getCurrentId();
-        Comment comment = this.getById(id);
-        if (Objects.equals(comment.getUserId(), userId)) {
-            this.removeById(id);
-            return Result.success("删除评论成功");
-        }else {
-            return Result.error("您无法删除他人的评论");
+        removeComment(id);
+        return Result.success("删除成功");
+    }
+
+    @Override
+    public Result<List<Comment>> getComment(Long treadsId) {
+        List<Comment> commentList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getTreadsId, treadsId));
+        List<Comment> comments = processComments(commentList);
+        return Result.success(comments);
+    }
+
+
+    /**
+     * 组装评论
+     * @param list 该动态下的全部评论
+     * @return 组装后的评论
+     */
+    private List<Comment> processComments(List<Comment> list){
+        Map<Long,Comment> map = new HashMap<>();
+        List<Comment> result  = new ArrayList<>();
+        // 将所有根评论加入map
+        list.stream().peek(comment -> {
+            if (comment.getParentId() == null){
+                result.add(comment);
+            }
+            map.put(comment.getId(),comment);
+        });
+        // 子评论加入到父评论的 child 中
+        list.stream().peek(comment -> {
+            Long parentId = comment.getParentId();
+            if (parentId != null) { // 当前评论为子评论
+                Comment p = map.get(parentId);
+                if (p.getChild() == null) {
+                    p.setChild(new ArrayList<>()); // child为空 则创建
+                }
+                p.getChild().add(comment);
+            }
+        });
+        return result;
+    }
+
+    /**
+     * 递归删除评论以及该评论的子评论
+     * @param id 评论id
+     */
+    private void removeComment(Long id){
+        this.removeById(id);// 删除该评论
+        List<Comment> childList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getParentId, id));// 获取该评论下的子评论
+        // 递归
+        if (CollUtils.isNotEmpty(childList)) {
+            childList.stream().peek(item -> removeComment(item.getId()));
         }
     }
 }
