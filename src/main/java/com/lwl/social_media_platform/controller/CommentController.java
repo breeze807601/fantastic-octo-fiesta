@@ -1,12 +1,13 @@
 package com.lwl.social_media_platform.controller;
 
 import com.lwl.social_media_platform.common.Result;
+import com.lwl.social_media_platform.domain.dto.PageDTO;
 import com.lwl.social_media_platform.domain.pojo.Comment;
+import com.lwl.social_media_platform.domain.query.CommentPageQuery;
+import com.lwl.social_media_platform.domain.vo.CommentVo;
 import com.lwl.social_media_platform.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/comment")
@@ -15,8 +16,8 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping
-    public Result<List<Comment>> getComment(@RequestParam("id") Long treadsId){
-        return commentService.getComment(treadsId);
+    public Result<PageDTO<CommentVo>> getComment(@RequestBody CommentPageQuery commentPageQuery){
+        return Result.success(commentService.getComment(commentPageQuery));
     }
 
     @PostMapping("/save")
