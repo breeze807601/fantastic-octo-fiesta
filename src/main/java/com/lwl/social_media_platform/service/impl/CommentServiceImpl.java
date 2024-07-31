@@ -32,7 +32,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         Long userId = BaseContext.getCurrentId();
         User user = userService.getById(userId);
         comment.setUserId(userId)
-                .setNickName(user.getNickname())
+                .setNickname(user.getNickname())
                 .setCreateTime(LocalDateTime.now());
         this.save(comment);
         return Result.success(comment);

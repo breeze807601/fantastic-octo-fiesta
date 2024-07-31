@@ -16,15 +16,15 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 public class Comment {
     private Long id;
-    private Long userId;
-    private String nickName;
     private String content;
-    private LocalDateTime createTime;
+    private Long userId;
+    private String nickname;
+    private String userPic;
     private Long treadsId;
+    private Long toUserId;
+    private String toUserNickname;
     private Long parentId;
     private Long rootParentId;
-    private Long toUserId;
-    private String toUserNickName;
-    private String toUserPic;
+    private LocalDateTime createTime;
 
 }
