@@ -2,7 +2,6 @@ package com.lwl.social_media_platform.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.PageUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -11,11 +10,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
 import com.lwl.social_media_platform.domain.dto.PageDTO;
+import com.lwl.social_media_platform.domain.dto.TreadsDTO;
 import com.lwl.social_media_platform.domain.pojo.*;
 import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
-import com.lwl.social_media_platform.mapper.TreadsMapper;
-import com.lwl.social_media_platform.domain.dto.TreadsDTO;
 import com.lwl.social_media_platform.domain.vo.TreadsVo;
+import com.lwl.social_media_platform.mapper.TreadsMapper;
 import com.lwl.social_media_platform.service.*;
 import com.lwl.social_media_platform.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -59,9 +57,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 为 tag 设置动态id
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
         if (CollUtil.isNotEmpty(treadsTagList)) {
-            treadsTagList.stream()
-                    .map(item -> item.setTreadsId(treadsId))
-                    .collect(Collectors.toList());
+            treadsTagList.forEach(item -> item.setTreadsId(treadsId));
             // 保存标签
             treadsTagService.saveBatch(treadsTagList);
         }
@@ -69,9 +65,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 为 图片列表 设置动态id
         List<Image> imageList = treadsDTO.getImageList();
         if(CollUtil.isNotEmpty(imageList)){
-            imageList.stream()
-                    .map(item -> item.setTreadsId(treadsId))
-                    .collect(Collectors.toList());
+            imageList.forEach(item -> item.setTreadsId(treadsId));
             // 保存图片
             imageService.saveBatch(imageList);
         }
@@ -151,9 +145,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
         if (CollUtil.isNotEmpty(treadsTagList)) {
             // 设置动态id
-            treadsTagList.stream()
-                    .map(item -> item.setTreadsId(treadsId))
-                    .collect(Collectors.toList());
+            treadsTagList.forEach(item -> item.setTreadsId(treadsId));
 
             // 保存新标签
             treadsTagService.saveBatch(treadsTagList);
