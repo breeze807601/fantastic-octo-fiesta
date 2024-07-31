@@ -16,7 +16,7 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping
-    public Result<PageDTO<CommentVo>> getComment(@RequestBody CommentPageQuery commentPageQuery){
+    public Result<PageDTO<CommentVo>> getComment(CommentPageQuery commentPageQuery){
         return Result.success(commentService.getComment(commentPageQuery));
     }
 

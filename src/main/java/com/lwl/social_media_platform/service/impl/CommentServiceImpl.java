@@ -20,10 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -47,11 +44,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return Result.success("删除成功");
     }
 
-    public Result<List<Comment>> getComment(Long treadsId) {
-        List<Comment> commentList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getTreadsId, treadsId));
-        List<Comment> comments = processComments(commentList);
-        return Result.success(comments);
-    }
+//    public Result<List<Comment>> getComment(Long treadsId) {
+//        List<Comment> commentList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getTreadsId, treadsId));
+//        List<Comment> comments = processComments(commentList);
+//        return Result.success(comments);
+//    }
 
     @Override
     public PageDTO<CommentVo> getComment(CommentPageQuery commentPageQuery) {
@@ -61,7 +58,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         );
 
         List<Comment> commentList = commentPage.getRecords();
-        ReplyPageQuery replyPageQuery = commentPageQuery.getReplyPageQuery();
+        ReplyPageQuery replyPageQuery = new ReplyPageQuery();
+        replyPageQuery.setPageSize(commentPageQuery.getPageSize())
+                .setPageNo(commentPageQuery.getPageNo());
 
         List<CommentVo> commentVoList = commentList.stream().map(comment -> {
             PageDTO<Comment> replyPage = getReply(replyPageQuery.setCommentId(comment.getId()));
@@ -80,35 +79,35 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
 
-    /**
-     * 组装评论
-     *
-     * @param list 该动态下的全部评论
-     * @return 组装后的评论
-     */
-    private List<Comment> processComments(List<Comment> list) {
-        Map<Long, Comment> map = new HashMap<>();
-        List<Comment> result = new ArrayList<>();
-        // 将所有根评论加入map
-        list.stream().peek(comment -> {
-            if (comment.getParentId() == null) {
-                result.add(comment);
-            }
-            map.put(comment.getId(), comment);
-        });
-        // 子评论加入到父评论的 child 中
-        list.stream().peek(comment -> {
-            Long parentId = comment.getParentId();
-            if (parentId != null) { // 当前评论为子评论
-                Comment p = map.get(parentId);
-                if (p.getChild() == null) {
-                    p.setChild(new ArrayList<>()); // child为空 则创建
-                }
-                p.getChild().add(comment);
-            }
-        });
-        return result;
-    }
+//    /**
+//     * 组装评论
+//     *
+//     * @param list 该动态下的全部评论
+//     * @return 组装后的评论
+//     */
+//    private List<Comment> processComments(List<Comment> list) {
+//        Map<Long, Comment> map = new HashMap<>();
+//        List<Comment> result = new ArrayList<>();
+//        // 将所有根评论加入map
+//        list.stream().peek(comment -> {
+//            if (comment.getParentId() == null) {
+//                result.add(comment);
+//            }
+//            map.put(comment.getId(), comment);
+//        });
+//        // 子评论加入到父评论的 child 中
+//        list.stream().peek(comment -> {
+//            Long parentId = comment.getParentId();
+//            if (parentId != null) { // 当前评论为子评论
+//                Comment p = map.get(parentId);
+//                if (p.getChild() == null) {
+//                    p.setChild(new ArrayList<>()); // child为空 则创建
+//                }
+//                p.getChild().add(comment);
+//            }
+//        });
+//        return result;
+//    }
 
     /**
      * 递归删除评论以及该评论的子评论
