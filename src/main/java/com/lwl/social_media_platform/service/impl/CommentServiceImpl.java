@@ -44,26 +44,25 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         return Result.success("删除成功");
     }
 
-//    public Result<List<Comment>> getComment(Long treadsId) {
-//        List<Comment> commentList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getTreadsId, treadsId));
-//        List<Comment> comments = processComments(commentList);
-//        return Result.success(comments);
-//    }
-
     @Override
     public PageDTO<CommentVo> getComment(CommentPageQuery commentPageQuery) {
+        // 根据分页获取评论
         Page<Comment> commentPage = this.page(
                 commentPageQuery.toMpPageDefaultSortByCreateTimeDesc(),
                 new LambdaQueryWrapper<Comment>().eq(Comment::getTreadsId, commentPageQuery.getTreadsId())
         );
 
+        // 获取评论集合
         List<Comment> commentList = commentPage.getRecords();
+
+        // 封装 回复分页
         ReplyPageQuery replyPageQuery = new ReplyPageQuery();
         replyPageQuery.setPageSize(commentPageQuery.getPageSize())
                 .setPageNo(commentPageQuery.getPageNo());
 
+        // stream流 获取每个评论的回复并封装到评论commentVo中
         List<CommentVo> commentVoList = commentList.stream().map(comment -> {
-            PageDTO<Comment> replyPage = getReply(replyPageQuery.setCommentId(comment.getId()));
+            PageDTO<Comment> replyPage = getReply(replyPageQuery.setCommentId(comment.getId())); // 调用获取回复getReply方法
             return new CommentVo(comment,replyPage);
         }).toList();
 
@@ -71,14 +70,36 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
-    public PageDTO<Comment> getReply(ReplyPageQuery replyPageQuery) {
+    public PageDTO<Comment> replyPage(ReplyPageQuery replyPageQuery) {
+        return getReply(replyPageQuery);
+    }
+
+    private PageDTO<Comment> getReply(ReplyPageQuery replyPageQuery) {
         Page<Comment> replyPage = this.page(
                 replyPageQuery.toMpPageDefaultSortByCreateTimeDesc(),
                 new LambdaQueryWrapper<Comment>().eq(Comment::getParentId, replyPageQuery.getCommentId()));
         return PageUtils.of(replyPage, replyPage.getRecords());
     }
 
+    /**
+     * 递归删除评论以及该评论的子评论
+     *
+     * @param id 评论id
+     */
+    private void removeComment(Long id) {
+        this.removeById(id);// 删除该评论
+        List<Comment> childList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getParentId, id));// 获取该评论下的子评论
+        // 递归
+        if (CollUtils.isNotEmpty(childList)) {
+            childList.forEach(reply -> removeComment(reply.getId()));
+        }
+    }
 
+//    public Result<List<Comment>> getComment(Long treadsId) {
+//        List<Comment> commentList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getTreadsId, treadsId));
+//        List<Comment> comments = processComments(commentList);
+//        return Result.success(comments);
+//    }
 //    /**
 //     * 组装评论
 //     *
@@ -108,18 +129,4 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 //        });
 //        return result;
 //    }
-
-    /**
-     * 递归删除评论以及该评论的子评论
-     *
-     * @param id 评论id
-     */
-    private void removeComment(Long id) {
-        this.removeById(id);// 删除该评论
-        List<Comment> childList = this.list(new LambdaQueryWrapper<Comment>().eq(Comment::getParentId, id));// 获取该评论下的子评论
-        // 递归
-        if (CollUtils.isNotEmpty(childList)) {
-            childList.stream().peek(item -> removeComment(item.getId()));
-        }
-    }
 }

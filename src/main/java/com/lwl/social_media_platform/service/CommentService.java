@@ -13,5 +13,5 @@ public interface CommentService extends IService<Comment> {
     Result<Comment> saveComment(Comment comment);
     Result<String> deleteComment(Long id);
     PageDTO<CommentVo> getComment(CommentPageQuery commentPageQuery);
-    PageDTO<Comment> getReply(ReplyPageQuery replyPageQuery);
+    PageDTO<Comment> replyPage(ReplyPageQuery replyPageQuery);
 }
