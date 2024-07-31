@@ -7,5 +7,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class CommentPageQuery extends PageQuery{
     private Long treadsId;
-    private ReplyPageQuery replyPageQuery;
+    private Integer replyPageNo = DEFAULT_PAGE_NUM;
+    private Integer replyPageSize = DEFAULT_PAGE_SIZE;
 }

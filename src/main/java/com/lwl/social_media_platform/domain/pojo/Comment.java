@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 评论信息
@@ -23,6 +22,9 @@ public class Comment {
     private LocalDateTime createTime;
     private Long treadsId;
     private Long parentId;
-    private Long rootParenId;
-    private List<Comment> child;
+    private Long rootParentId;
+    private Long toUserId;
+    private String toUserNickName;
+    private String toUserPic;
+
 }
