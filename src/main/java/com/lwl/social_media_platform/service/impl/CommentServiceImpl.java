@@ -33,6 +33,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         User user = userService.getById(userId);
         comment.setUserId(userId)
                 .setNickname(user.getNickname())
+                .setUserPic(user.getPic())
                 .setCreateTime(LocalDateTime.now());
         this.save(comment);
         return Result.success(comment);
