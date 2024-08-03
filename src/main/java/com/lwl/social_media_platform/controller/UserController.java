@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lwl.social_media_platform.common.Result;
 import com.lwl.social_media_platform.domain.pojo.User;
 import com.lwl.social_media_platform.domain.vo.UserLoginVo;
+import com.lwl.social_media_platform.domain.vo.UserVo;
 import com.lwl.social_media_platform.service.UserService;
 import com.lwl.social_media_platform.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,15 +42,20 @@ public class UserController {
         return Result.success(userLoginVo);
     }
     @PostMapping("/register")
-    public Result register(@RequestBody User user) {
+    public Result<User> register(@RequestBody User user) {
         // 默认头像
         user.setPic("https://homework1015.oss-cn-beijing.aliyuncs.com/pic.png");
         userService.save(user);
         return Result.success(user);
     }
     @GetMapping("/getUser")
-    public Result gerUser(){
+    public Result<List<User>> getUser(){
         List<User> list = userService.list();
         return Result.success(list);
+    }
+
+    @GetMapping("/getUserById")
+    public Result<UserVo> getUserById(@RequestParam("id") Long id){
+        return Result.success(userService.getUserById(id));
     }
 }
