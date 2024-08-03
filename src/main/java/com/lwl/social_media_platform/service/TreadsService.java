@@ -17,7 +17,10 @@ public interface TreadsService extends IService<Treads> {
 
     Result<TreadsVo> getTread(Long id);
 
+    Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery);
+
     Result<List<TreadsVo>> getTreadsList(Long userId);
+
     Result<PageDTO<TreadsVo>> getTreadsPage(TreadsPageQuery treadsPageQuery);
 
     Result<String> updateTread(TreadsDTO treadsDTO);

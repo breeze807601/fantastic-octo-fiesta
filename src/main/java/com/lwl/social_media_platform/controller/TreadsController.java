@@ -32,6 +32,10 @@ public class TreadsController {
     public Result<TreadsVo> getTread(@RequestParam("id") Long id){
         return treadsService.getTread(id);
     }
+    @GetMapping("/getByUser")
+    public Result<PageDTO<TreadsVo>> getTreadsByUser(TreadsPageQuery treadsPageQuery){
+        return treadsService.getTreadByUserId(treadsPageQuery);
+    }
 
     @PostMapping("/update")
     public Result<String> updateTread(@RequestBody TreadsDTO treadsDTO){
@@ -45,8 +49,8 @@ public class TreadsController {
 
     /**
      * 返回 动态 分页
-     * @param treadsPageQuery
-     * @return
+     * @param treadsPageQuery 分页数据
+     * @return TreadsVo 分页
      */
     @GetMapping("/page")
     public Result<PageDTO<TreadsVo>> getTreadsPage(TreadsPageQuery treadsPageQuery){

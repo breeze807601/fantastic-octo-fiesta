@@ -28,6 +28,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> implements TreadsService {
+
     private final TagService tagService;
     private final TreadsTagService treadsTagService;
     private final ImageService imageService;
@@ -89,7 +90,20 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
     @Override
     public Result<TreadsVo> getTread(Long id) {
-        return Result.success(getTreadsVo(id));// 调用 getTreadsVo 方法 返回 TreadsVo
+        Treads treads = this.getById(id);
+        return Result.success(getTreadsVo(treads));// 调用 getTreadsVo 方法 返回 TreadsVo
+    }
+
+    @Override
+    public Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery){
+        Page<Treads> treadsPage = this.page(
+                treadsPageQuery.toMpPageDefaultSortByCreateTimeDesc(),
+                new LambdaQueryWrapper<Treads>().eq(Treads::getUserId, treadsPageQuery.getUserId()));
+        List<Treads> treadsList = treadsPage.getRecords();
+        List<TreadsVo> treadsVoList = treadsList.stream().map(this::getTreadsVo).toList();
+        PageDTO<TreadsVo> treadsVoPage = PageUtils.of(treadsPage, treadsVoList);
+
+        return Result.success(treadsVoPage);
     }
 
 
@@ -107,7 +121,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         // 将每个 Treads 转换成 TreadsVo
         List<TreadsVo> treadsVoList = treadsList.stream()
-                .map(treadsOne -> getTreadsVo(treadsOne.getId()))
+                .map(this::getTreadsVo)
                 .toList();
 
         return Result.success(treadsVoList);
@@ -121,7 +135,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         List<Treads> records = treadsPage.getRecords();
         List<TreadsVo> treadsVos = records.stream()
-                .map(item -> getTreadsVo(item.getId()))
+                .map(this::getTreadsVo)
                 .toList();
 
         return Result.success(PageUtils.of(treadsPage,treadsVos));
@@ -157,16 +171,14 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
     /**
      * 将 组合 TreadsVo 抽象出为一个方法
-     * @param id treadsId
+     * @param treads 动态
      * @return treadsVo
      */
-    private TreadsVo getTreadsVo(Long id){
+    private TreadsVo getTreadsVo(Treads treads){
         long userId = BaseContext.getCurrentId();
 
-        // 获取动态
-        Treads treads = this.getById(id);
-
         // 获取该动态的标签id
+        Long id = treads.getId();
         List<TreadsTag> treadsTags = treadsTagService.list(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId, id));
         // 取出标签id
         List<Long> tagsId = treadsTags.stream().map(TreadsTag::getTagId).toList();
