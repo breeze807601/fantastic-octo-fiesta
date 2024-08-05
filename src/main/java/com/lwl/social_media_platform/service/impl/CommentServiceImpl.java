@@ -58,8 +58,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
         // 封装 回复分页
         ReplyPageQuery replyPageQuery = new ReplyPageQuery();
-        replyPageQuery.setPageSize(commentPageQuery.getPageSize())
-                .setPageNo(commentPageQuery.getPageNo());
+        replyPageQuery.setPageSize(commentPageQuery.getReplyPageSize())
+                .setPageNo(commentPageQuery.getReplyPageNo());
 
         // stream流 获取每个评论的回复并封装到评论commentVo中
         List<CommentVo> commentVoList = commentList.stream().map(comment -> {
