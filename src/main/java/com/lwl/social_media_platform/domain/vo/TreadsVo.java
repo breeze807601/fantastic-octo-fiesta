@@ -18,6 +18,7 @@ public class TreadsVo extends Treads {
     private List<Image>  imageList;
     private Long supportNum;
     private Boolean isFollow;
+    private Boolean isSupport;
     private String pic;
     private String nickName;
 }
