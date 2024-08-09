@@ -28,6 +28,6 @@ public interface TreadsService extends IService<Treads> {
 
     Result<String> support(Support support);
 
-    Result<String> unSupport(Support support);
+    Result<String> cancelSupport(Support support);
 
 }

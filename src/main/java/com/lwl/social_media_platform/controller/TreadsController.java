@@ -4,6 +4,7 @@ import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
 import com.lwl.social_media_platform.domain.dto.PageDTO;
 import com.lwl.social_media_platform.domain.dto.TreadsDTO;
+import com.lwl.social_media_platform.domain.pojo.Support;
 import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
 import com.lwl.social_media_platform.domain.vo.TreadsVo;
 import com.lwl.social_media_platform.service.TreadsService;
@@ -61,5 +62,15 @@ public class TreadsController {
     public Result<List<TreadsVo>> getMyTreadsList(){
         Long userId = BaseContext.getCurrentId();
         return getTreadsList(userId);
+    }
+
+    @PostMapping("/support")
+    public Result<String> support(Support support){
+        return treadsService.support(support);
+    }
+
+    @PostMapping("/cancel")
+    public Result<String> cancelSupport(Support support){
+        return treadsService.cancelSupport(support);
     }
 }

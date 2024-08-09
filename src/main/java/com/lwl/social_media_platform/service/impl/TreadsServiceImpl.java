@@ -231,7 +231,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     }
 
     @Override
-    public Result<String> unSupport(Support support) {
+    public Result<String> cancelSupport(Support support) {
         supportService.remove(
                 new LambdaQueryWrapper<Support>()
                 .eq(Support::getTreadsId,support.getTreadsId())
