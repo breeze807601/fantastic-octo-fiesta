@@ -6,4 +6,5 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ConcentrationPageQuery extends PageQuery{
+    Long userId;
 }

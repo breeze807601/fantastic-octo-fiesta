@@ -57,24 +57,24 @@ public class ConcentrationServiceImpl extends ServiceImpl<ConcentrationMapper, C
     }
 
     @Override
-    public Result<Long> getConcentrationNum() {
-        return Result.success(getNum(Concentration::getToUserId));
+    public Result<Long> getConcentrationNum(Long userId) {
+        return Result.success(getNum(Concentration::getToUserId,userId));
     }
 
     @Override
-    public Result<Long> getToConcentrationNum() {
-        return Result.success(getNum(Concentration::getUserId));
+    public Result<Long> getToConcentrationNum(Long userId) {
+        return Result.success(getNum(Concentration::getUserId,userId));
     }
 
     /**
      * 根据传入方法 判断是获取关注列表还是粉丝列表
      * @param user 获取当前用户关注列表/获取当前该用户的粉丝列表
-     * @param toUser 根据 user 获取详细用户信息
+     * @param toUser 根据 {@param user } 获取详细用户信息
      * @param concentrationPageQuery 分页条件
      * @return userVo 分页
      */
     private PageDTO<UserVo> getUserVoPageDTO(SFunction<Concentration,Long> user,SFunction<Concentration,Long> toUser,ConcentrationPageQuery concentrationPageQuery){
-        Long userId = BaseContext.getCurrentId();
+        Long userId = concentrationPageQuery.getUserId();
         Page<Concentration> concentrationPage = this.lambdaQuery()
                 .eq(user, userId)
                 .page(concentrationPageQuery.toMpPageDefaultSortByCreateTimeDesc());
@@ -94,9 +94,8 @@ public class ConcentrationServiceImpl extends ServiceImpl<ConcentrationMapper, C
      * @param function 根据传入方法判断获取关注数还是被关注数
      * @return 关注数
      */
-    private Long getNum(SFunction<Concentration,Long> function){
-        Long userId = BaseContext.getCurrentId();
-        return this.lambdaQuery().eq(function, userId).count();
+    private Long getNum(SFunction<Concentration,Long> function,Long usrId){
+        return this.lambdaQuery().eq(function, usrId).count();
     }
 
 }

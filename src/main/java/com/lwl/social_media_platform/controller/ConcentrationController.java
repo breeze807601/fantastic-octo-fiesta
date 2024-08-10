@@ -50,8 +50,8 @@ public class ConcentrationController {
      * @return 粉丝数
      */
     @GetMapping("get-concentration-num")
-    public Result<Long> getConcentrationNum(){
-        return concentrationService.getConcentrationNum();
+    public Result<Long> getConcentrationNum(Long userId){
+        return concentrationService.getConcentrationNum(userId);
     }
 
     /**
@@ -59,8 +59,8 @@ public class ConcentrationController {
      * @return 关注数
      */
     @GetMapping("get-to-concentration-num")
-    public Result<Long> getToConcentrationNum(){
-        return concentrationService.getToConcentrationNum();
+    public Result<Long> getToConcentrationNum(Long userId){
+        return concentrationService.getToConcentrationNum(userId);
     }
 
 }
