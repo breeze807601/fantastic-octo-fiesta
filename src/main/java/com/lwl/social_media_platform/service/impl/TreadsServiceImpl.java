@@ -28,7 +28,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> implements TreadsService {
-
     private final TagService tagService;
     private final TreadsTagService treadsTagService;
     private final ImageService imageService;
@@ -205,19 +204,41 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 获取动态作者
         User user = userService.getById(toUserId);
 
+        LambdaQueryWrapper<Support> supportLambdaQueryWrapper = new LambdaQueryWrapper<>();
         // 获取点赞数
-        long supportNum = supportService.count(new LambdaQueryWrapper<Support>().eq(Support::getTreadsId, id));
+        long supportNum = supportService.count(supportLambdaQueryWrapper.eq(Support::getTreadsId, id));
+        // 是否点赞
+        boolean isSupport = supportService.exists(supportLambdaQueryWrapper.eq(Support::getTreadsId, id).eq(Support::getUserId,userId));
 
         // 转换为vo
         TreadsVo treadsVo = BeanUtil.copyProperties(treads, TreadsVo.class);
-        // 设置标签 图片url 是否关注 点赞数
+        // 设置标签 图片url 是否关注 点赞数 已点赞
         treadsVo.setTagList(tags)
                 .setImageList(imageList)
                 .setIsFollow(concentration != null)
                 .setSupportNum(supportNum)
                 .setNickName(user.getUsername())
-                .setPic(user.getPic());
+                .setPic(user.getPic())
+                .setIsSupport(isSupport);
 
         return treadsVo;
     }
+
+    @Override
+    public Result<String> support(Support support) {
+        supportService.save(support);
+        return Result.success("点赞成功");
+    }
+
+    @Override
+    public Result<String> cancelSupport(Support support) {
+        supportService.remove(
+                new LambdaQueryWrapper<Support>()
+                .eq(Support::getTreadsId,support.getTreadsId())
+                .eq(Support::getUserId,support.getUserId())
+        );
+        return Result.success("取消点赞成功");
+    }
+
+
 }

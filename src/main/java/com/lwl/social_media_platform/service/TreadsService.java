@@ -3,6 +3,7 @@ package com.lwl.social_media_platform.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lwl.social_media_platform.common.Result;
 import com.lwl.social_media_platform.domain.dto.PageDTO;
+import com.lwl.social_media_platform.domain.pojo.Support;
 import com.lwl.social_media_platform.domain.pojo.Treads;
 import com.lwl.social_media_platform.domain.dto.TreadsDTO;
 import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
@@ -25,5 +26,8 @@ public interface TreadsService extends IService<Treads> {
 
     Result<String> updateTread(TreadsDTO treadsDTO);
 
+    Result<String> support(Support support);
+
+    Result<String> cancelSupport(Support support);
 
 }

@@ -26,7 +26,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
     private final UserService userService;
-
     @Override
     public Result<Comment> saveComment(Comment comment) {
         Long userId = BaseContext.getCurrentId();
@@ -34,7 +33,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setUserId(userId)
                 .setNickname(user.getNickname())
                 .setUserPic(user.getPic())
-                .setCreateTime(LocalDateTime.now());
+                .setCreateTime(LocalDateTime.now())
+                .setContent(
+                        comment.getContent()
+                                .replace("\n","<br/>")
+                                .replace("\r","")
+                );
         this.save(comment);
         return Result.success(comment);
     }
@@ -74,6 +78,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     public PageDTO<Comment> replyPage(ReplyPageQuery replyPageQuery) {
         return getReply(replyPageQuery);
     }
+
+
 
     private PageDTO<Comment> getReply(ReplyPageQuery replyPageQuery) {
         Page<Comment> replyPage = this.page(
