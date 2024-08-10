@@ -1,10 +1,13 @@
 package com.lwl.social_media_platform.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.lwl.social_media_platform.common.BaseContext;
 import com.lwl.social_media_platform.common.Result;
+import com.lwl.social_media_platform.domain.pojo.Concentration;
 import com.lwl.social_media_platform.domain.pojo.User;
 import com.lwl.social_media_platform.domain.vo.UserLoginVo;
 import com.lwl.social_media_platform.domain.vo.UserVo;
+import com.lwl.social_media_platform.service.ConcentrationService;
 import com.lwl.social_media_platform.service.UserService;
 import com.lwl.social_media_platform.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,9 @@ import java.util.Map;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ConcentrationService concentrationService;
     @PostMapping("/login")
     public Result<UserLoginVo> login(String username, String password) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
@@ -56,6 +62,23 @@ public class UserController {
 
     @GetMapping("/getUserById")
     public Result<UserVo> getUserById(@RequestParam("id") Long id){
-        return Result.success(userService.getUserById(id));
+        UserVo userVo = userService.getUserById(id);
+        Long currentUserId = BaseContext.getCurrentId();
+
+        LambdaQueryWrapper<Concentration> wrapper = new LambdaQueryWrapper<>();
+
+        Concentration isFollow = concentrationService.getOne(
+                wrapper.eq(Concentration::getUserId, currentUserId)
+                        .eq(Concentration::getToUserId, userVo.getId())
+        );
+
+        long followCount = concentrationService.getToConcentrationNum(userVo.getId());
+        long fansCount = concentrationService.getConcentrationNum(userVo.getId());
+
+        userVo.setIsFollow(isFollow != null)
+                .setFansNum(fansCount)
+                .setFollowNum(followCount);
+
+        return Result.success(userVo);
     }
 }

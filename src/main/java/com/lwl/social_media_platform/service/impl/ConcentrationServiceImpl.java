@@ -57,13 +57,13 @@ public class ConcentrationServiceImpl extends ServiceImpl<ConcentrationMapper, C
     }
 
     @Override
-    public Result<Long> getConcentrationNum(Long userId) {
-        return Result.success(getNum(Concentration::getToUserId,userId));
+    public Long getConcentrationNum(Long userId) {
+        return getNum(Concentration::getToUserId,userId);
     }
 
     @Override
-    public Result<Long> getToConcentrationNum(Long userId) {
-        return Result.success(getNum(Concentration::getUserId,userId));
+    public Long getToConcentrationNum(Long userId) {
+        return getNum(Concentration::getUserId,userId);
     }
 
     /**

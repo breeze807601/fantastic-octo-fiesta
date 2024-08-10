@@ -31,11 +31,11 @@ public interface ConcentrationService extends IService<Concentration> {
      * 该用户的粉丝数
      * @return 粉丝数
      */
-    Result<Long> getConcentrationNum(Long userId);
+    Long getConcentrationNum(Long userId);
 
     /**
      * 该用户的关注数
      * @return 关注数
      */
-    Result<Long> getToConcentrationNum(Long userId);
+    Long getToConcentrationNum(Long userId);
 }
