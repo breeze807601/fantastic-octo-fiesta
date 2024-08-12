@@ -19,4 +19,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         return BeanUtils.copyProperties(user, UserVo.class);
     }
+
+    @Override
+    public UserVo updateUser(User user) {
+        this.updateById(user);
+        return BeanUtils.copyProperties(user, UserVo.class);
+    }
 }

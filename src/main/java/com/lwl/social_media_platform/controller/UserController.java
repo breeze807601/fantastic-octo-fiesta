@@ -81,4 +81,9 @@ public class UserController {
 
         return Result.success(userVo);
     }
+
+    @PostMapping("/update")
+    public Result<UserVo> updateUser(@RequestBody User user){
+        return Result.success(userService.updateUser(user));
+    }
 }
