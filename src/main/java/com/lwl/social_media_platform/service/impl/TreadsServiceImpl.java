@@ -240,5 +240,10 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         return Result.success("取消点赞成功");
     }
 
+    @Override
+    public List<TreadsVo> getCurrentHotTreads() {
+        return null;
+    }
+
 
 }

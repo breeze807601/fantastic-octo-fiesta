@@ -30,4 +30,6 @@ public interface TreadsService extends IService<Treads> {
 
     Result<String> cancelSupport(Support support);
 
+    List<TreadsVo> getCurrentHotTreads();
+
 }
