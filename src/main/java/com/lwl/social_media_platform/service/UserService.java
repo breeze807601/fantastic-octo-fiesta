@@ -6,4 +6,6 @@ import com.lwl.social_media_platform.domain.vo.UserVo;
 
 public interface UserService extends IService<User> {
     UserVo getUserById(Long id);
+
+    UserVo updateUser(User user);
 }
