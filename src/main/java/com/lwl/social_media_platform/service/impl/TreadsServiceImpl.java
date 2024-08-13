@@ -53,6 +53,9 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         treadsDTO.setUserId(userId);
 
+        String content = treadsDTO.getContent();
+        String str = content.replace("\n", "<br/>").replace("\r", "");
+        treadsDTO.setContent(str);
         treadsDTO.setCreateTime(LocalDateTime.now());
 
         // 保存动态
