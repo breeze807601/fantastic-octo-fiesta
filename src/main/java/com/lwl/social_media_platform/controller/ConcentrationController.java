@@ -4,7 +4,7 @@ import com.lwl.social_media_platform.common.Result;
 import com.lwl.social_media_platform.domain.dto.PageDTO;
 import com.lwl.social_media_platform.domain.pojo.Concentration;
 import com.lwl.social_media_platform.domain.query.ConcentrationPageQuery;
-import com.lwl.social_media_platform.domain.vo.UserVo;
+import com.lwl.social_media_platform.domain.vo.UserConcentrationVo;
 import com.lwl.social_media_platform.service.ConcentrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -31,8 +31,8 @@ public class ConcentrationController {
      * @param concentrationPageQuery 分页条件
      * @return 粉丝 userVo 分页
      */
-    @GetMapping("get-concentration")
-    public Result<PageDTO<UserVo>> getConcentration(ConcentrationPageQuery concentrationPageQuery) {
+    @GetMapping("/get-concentration")
+    public Result<PageDTO<UserConcentrationVo>> getConcentration(ConcentrationPageQuery concentrationPageQuery) {
         return concentrationService.getConcentration(concentrationPageQuery);
     }
 
@@ -42,8 +42,8 @@ public class ConcentrationController {
      * @param concentrationPageQuery 分页条件
      * @return 关注的 userVo 分页
      */
-    @GetMapping("get-to-concentration")
-    public Result<PageDTO<UserVo>> getToConcentration(ConcentrationPageQuery concentrationPageQuery) {
+    @GetMapping("/get-to-concentration")
+    public Result<PageDTO<UserConcentrationVo>> getToConcentration(ConcentrationPageQuery concentrationPageQuery) {
         return concentrationService.getToConcentration(concentrationPageQuery);
     }
 
@@ -52,7 +52,7 @@ public class ConcentrationController {
      *
      * @return 粉丝数
      */
-    @GetMapping("get-concentration-num")
+    @GetMapping("/get-concentration-num")
     public Result<Long> getConcentrationNum(Long userId) {
         return Result.success(concentrationService.getConcentrationNum(userId));
     }
@@ -62,7 +62,7 @@ public class ConcentrationController {
      *
      * @return 关注数
      */
-    @GetMapping("get-to-concentration-num")
+    @GetMapping("/get-to-concentration-num")
     public Result<Long> getToConcentrationNum(Long userId) {
         return Result.success(concentrationService.getToConcentrationNum(userId));
     }
