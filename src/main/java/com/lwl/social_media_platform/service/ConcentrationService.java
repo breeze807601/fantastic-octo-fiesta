@@ -5,7 +5,7 @@ import com.lwl.social_media_platform.common.Result;
 import com.lwl.social_media_platform.domain.dto.PageDTO;
 import com.lwl.social_media_platform.domain.pojo.Concentration;
 import com.lwl.social_media_platform.domain.query.ConcentrationPageQuery;
-import com.lwl.social_media_platform.domain.vo.UserVo;
+import com.lwl.social_media_platform.domain.vo.UserConcentrationVo;
 
 public interface ConcentrationService extends IService<Concentration> {
 
@@ -18,14 +18,14 @@ public interface ConcentrationService extends IService<Concentration> {
      * @param concentrationPageQuery 分页条件
      * @return 粉丝 userVo 分页
      */
-    Result<PageDTO<UserVo>> getConcentration(ConcentrationPageQuery concentrationPageQuery);
+    Result<PageDTO<UserConcentrationVo>> getConcentration(ConcentrationPageQuery concentrationPageQuery);
 
     /**
      * 获取该用户的关注列表
      * @param concentrationPageQuery 分页条件
      * @return 关注的 userVo 分页
      */
-    Result<PageDTO<UserVo>> getToConcentration(ConcentrationPageQuery concentrationPageQuery);
+    Result<PageDTO<UserConcentrationVo>> getToConcentration(ConcentrationPageQuery concentrationPageQuery);
 
     /**
      * 该用户的粉丝数
