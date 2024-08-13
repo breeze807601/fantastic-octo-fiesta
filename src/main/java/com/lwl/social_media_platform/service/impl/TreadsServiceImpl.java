@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lwl.social_media_platform.common.BaseContext;
@@ -86,9 +85,9 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         this.removeById(id);
 
         // 删除动态相关标签
-        treadsTagService.remove(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId, id));
+        treadsTagService.lambdaUpdate().eq(TreadsTag::getTreadsId, id).remove();
         // 删除动态相关图片
-        imageService.remove(new LambdaQueryWrapper<Image>().eq(Image::getTreadsId, id));
+        imageService.lambdaUpdate().eq(Image::getTreadsId, id).remove();
 
         return Result.success("删除成功");
     }
@@ -101,9 +100,10 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
     @Override
     public Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery) {
-        Page<Treads> treadsPage = this.page(
-                treadsPageQuery.toMpPageDefaultSortByCreateTimeDesc(),
-                new LambdaQueryWrapper<Treads>().eq(Treads::getUserId, treadsPageQuery.getUserId()));
+        Page<Treads> treadsPage = this.lambdaQuery()
+                .eq(Treads::getUserId, treadsPageQuery.getUserId())
+                .page(treadsPageQuery.toMpPageDefaultSortByCreateTimeDesc());
+
         List<Treads> treadsList = treadsPage.getRecords();
         List<TreadsVo> treadsVoList = treadsList.stream().map(this::getTreadsVo).toList();
         PageDTO<TreadsVo> treadsVoPage = PageUtils.of(treadsPage, treadsVoList);
@@ -121,7 +121,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         if (userId == null) {
             treadsList = this.list();
         } else {
-            treadsList = this.list(new LambdaQueryWrapper<Treads>().eq(Treads::getUserId, userId));
+            treadsList = this.lambdaQuery().eq(Treads::getUserId, userId).list();
         }
 
         // 将每个 Treads 转换成 TreadsVo
@@ -149,16 +149,14 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     @Override
     @Transactional
     public Result<String> updateTread(TreadsDTO treadsDTO) {
-        LambdaUpdateWrapper<Treads> updateWrapper = new LambdaUpdateWrapper<>();
-        LambdaQueryWrapper<TreadsTag> queryWrapper = new LambdaQueryWrapper<>();
 
         Long treadsId = treadsDTO.getId();
 
         // 更新动态内容
-        this.update(updateWrapper.eq(Treads::getId, treadsId));
+        this.lambdaUpdate().eq(Treads::getId, treadsId).update();
 
         // 删除该动态的标签
-        treadsTagService.remove(queryWrapper.eq(TreadsTag::getTreadsId, treadsId));
+        treadsTagService.lambdaUpdate().eq(TreadsTag::getTreadsId, treadsId).remove();
 
         // 获取该动态的新标签
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
@@ -181,11 +179,11 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
      * @return treadsVo
      */
     private TreadsVo getTreadsVo(Treads treads) {
-        long userId = BaseContext.getCurrentId();
+        Long userId = BaseContext.getCurrentId();
 
         // 获取该动态的标签id
         Long id = treads.getId();
-        List<TreadsTag> treadsTags = treadsTagService.list(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId, id));
+        List<TreadsTag> treadsTags = treadsTagService.lambdaQuery().eq(TreadsTag::getTreadsId, id).list();
         // 取出标签id
         List<Long> tagsId = treadsTags.stream().map(TreadsTag::getTagId).toList();
         List<Tag> tags;
@@ -197,16 +195,15 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         }
 
         // 获取图片url
-        List<Image> imageList = imageService.list(new LambdaQueryWrapper<Image>().eq(Image::getTreadsId, id));
+        List<Image> imageList = imageService.lambdaQuery().eq(Image::getTreadsId, id).list();
 
         // 获取动态作者id
         long toUserId = treads.getUserId();
         // 是否关注
-        Concentration concentration = concentrationService.getOne(
-                new LambdaQueryWrapper<Concentration>()
-                        .eq(Concentration::getUserId, userId)
-                        .eq(Concentration::getToUserId, toUserId)
-        );
+        Concentration concentration = concentrationService.lambdaQuery()
+                .eq(userId != null, Concentration::getUserId, userId)
+                .eq(userId != null,Concentration::getToUserId, toUserId)
+                .getEntity();
 
         // 获取动态作者
         User user = userService.getById(toUserId);
@@ -239,11 +236,10 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
     @Override
     public Result<String> cancelSupport(Support support) {
-        supportService.remove(
-                new LambdaQueryWrapper<Support>()
-                        .eq(Support::getTreadsId, support.getTreadsId())
-                        .eq(Support::getUserId, support.getUserId())
-        );
+        supportService.lambdaUpdate()
+                .eq(Support::getTreadsId, support.getTreadsId())
+                .eq(Support::getUserId, support.getUserId())
+                .remove();
         return Result.success("取消点赞成功");
     }
 
@@ -263,7 +259,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         treadsList.forEach(item -> {
             Long supportNum = currentMaxSupportNum.get(item.getId());
-            if(supportNum != null){
+            if (supportNum != null) {
                 TreadsVo treadsVo = BeanUtils.copyProperties(item, TreadsVo.class);
                 treadsVo.setSupportNum(supportNum);
                 treadsVos.add(treadsVo);
@@ -272,6 +268,4 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         return treadsVos;
     }
-
-
 }
