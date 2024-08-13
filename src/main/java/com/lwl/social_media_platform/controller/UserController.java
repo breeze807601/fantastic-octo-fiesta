@@ -71,8 +71,8 @@ public class UserController {
                 .eq(Concentration::getToUserId, userVo.getId())
                 .exists();
 
-        long followCount = concentrationService.getToConcentrationNum(userVo.getId());
-        long fansCount = concentrationService.getConcentrationNum(userVo.getId());
+        long followCount = concentrationService.getConcentrationNum(userVo.getId());
+        long fansCount = concentrationService.getFansNum(userVo.getId());
 
         userVo.setIsFollow(isFollow)
                 .setFansNum(fansCount)

@@ -31,9 +31,9 @@ public class ConcentrationController {
      * @param concentrationPageQuery 分页条件
      * @return 粉丝 userVo 分页
      */
-    @GetMapping("/get-concentration")
-    public Result<PageDTO<UserConcentrationVo>> getConcentration(ConcentrationPageQuery concentrationPageQuery) {
-        return concentrationService.getConcentration(concentrationPageQuery);
+    @GetMapping("/get-fans")
+    public Result<PageDTO<UserConcentrationVo>> getFans(ConcentrationPageQuery concentrationPageQuery) {
+        return concentrationService.getFans(concentrationPageQuery);
     }
 
     /**
@@ -42,9 +42,9 @@ public class ConcentrationController {
      * @param concentrationPageQuery 分页条件
      * @return 关注的 userVo 分页
      */
-    @GetMapping("/get-to-concentration")
-    public Result<PageDTO<UserConcentrationVo>> getToConcentration(ConcentrationPageQuery concentrationPageQuery) {
-        return concentrationService.getToConcentration(concentrationPageQuery);
+    @GetMapping("/get-concentration")
+    public Result<PageDTO<UserConcentrationVo>> getConcentration(ConcentrationPageQuery concentrationPageQuery) {
+        return concentrationService.getConcentration(concentrationPageQuery);
     }
 
     /**
@@ -52,9 +52,9 @@ public class ConcentrationController {
      *
      * @return 粉丝数
      */
-    @GetMapping("/get-concentration-num")
-    public Result<Long> getConcentrationNum(Long userId) {
-        return Result.success(concentrationService.getConcentrationNum(userId));
+    @GetMapping("/get-fans-num")
+    public Result<Long> getFansNum(Long userId) {
+        return Result.success(concentrationService.getFansNum(userId));
     }
 
     /**
@@ -62,9 +62,9 @@ public class ConcentrationController {
      *
      * @return 关注数
      */
-    @GetMapping("/get-to-concentration-num")
+    @GetMapping("/get-concentration-num")
     public Result<Long> getToConcentrationNum(Long userId) {
-        return Result.success(concentrationService.getToConcentrationNum(userId));
+        return Result.success(concentrationService.getConcentrationNum(userId));
     }
 
 }
