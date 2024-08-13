@@ -6,6 +6,11 @@ spring:
         url: jdbc:mysql://localhost:3306/social_media_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
         username: root
         password: 1234567
+    data:
+        redis:
+            port: 6379
+            password: 1234567
+            host: 192.168.16.128
 mybatis-plus:
     configuration:
         map-underscore-to-camel-case: true
