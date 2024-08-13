@@ -12,6 +12,7 @@ import com.lwl.social_media_platform.domain.query.ConcentrationPageQuery;
 import com.lwl.social_media_platform.domain.vo.UserConcentrationVo;
 import com.lwl.social_media_platform.mapper.ConcentrationMapper;
 import com.lwl.social_media_platform.service.ConcentrationService;
+import com.lwl.social_media_platform.service.SupportService;
 import com.lwl.social_media_platform.service.UserService;
 import com.lwl.social_media_platform.utils.BeanUtils;
 import com.lwl.social_media_platform.utils.CollUtils;
@@ -45,22 +46,22 @@ public class ConcentrationServiceImpl extends ServiceImpl<ConcentrationMapper, C
     }
 
     @Override
+    public Result<PageDTO<UserConcentrationVo>> getFans(ConcentrationPageQuery concentrationPageQuery) {
+        return Result.success(getUserVoPageDTO(Concentration::getToUserId, Concentration::getUserId, concentrationPageQuery));
+    }
+
+    @Override
     public Result<PageDTO<UserConcentrationVo>> getConcentration(ConcentrationPageQuery concentrationPageQuery) {
-        return Result.success(getUserVoPageDTO(Concentration::getToUserId,Concentration::getUserId,concentrationPageQuery));
+        return Result.success(getUserVoPageDTO(Concentration::getUserId, Concentration::getToUserId, concentrationPageQuery));
     }
 
     @Override
-    public Result<PageDTO<UserConcentrationVo>> getToConcentration(ConcentrationPageQuery concentrationPageQuery) {
-        return Result.success(getUserVoPageDTO(Concentration::getUserId,Concentration::getToUserId,concentrationPageQuery));
-    }
-
-    @Override
-    public Long getConcentrationNum(Long userId) {
+    public Long getFansNum(Long userId) {
         return getNum(Concentration::getToUserId,userId);
     }
 
     @Override
-    public Long getToConcentrationNum(Long userId) {
+    public Long getConcentrationNum(Long userId) {
         return getNum(Concentration::getUserId,userId);
     }
 
@@ -85,7 +86,14 @@ public class ConcentrationServiceImpl extends ServiceImpl<ConcentrationMapper, C
 
             List<User> toUserList = userService.lambdaQuery().in(User::getId, toUserIdList).list();
 
-            List<UserConcentrationVo> toUserVoList = toUserList.stream().map(userItem -> BeanUtils.copyProperties(userItem, UserConcentrationVo.class)).toList();
+            List<UserConcentrationVo> toUserVoList = toUserList.stream().map(userItem -> {
+                Long currentUserId = BaseContext.getCurrentId();
+                boolean isFollow = this.lambdaQuery()
+                        .eq(Concentration::getUserId, currentUserId)
+                        .eq(Concentration::getToUserId, userItem.getId())
+                        .exists();
+                return BeanUtils.copyProperties(userItem, UserConcentrationVo.class).setIsFollow(isFollow);
+            }).toList();
 
             return PageUtils.of(concentrationPage, toUserVoList);
         }else {
