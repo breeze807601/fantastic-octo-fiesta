@@ -16,14 +16,19 @@ import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
 import com.lwl.social_media_platform.domain.vo.TreadsVo;
 import com.lwl.social_media_platform.mapper.TreadsMapper;
 import com.lwl.social_media_platform.service.*;
+import com.lwl.social_media_platform.utils.BeanUtils;
 import com.lwl.social_media_platform.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +39,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     private final ConcentrationService concentrationService;
     private final SupportService supportService;
     private final UserService userService;
+
     @Override
     @Transactional
     public Result<String> publish(TreadsDTO treadsDTO) {
@@ -64,7 +70,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         // 为 图片列表 设置动态id
         List<Image> imageList = treadsDTO.getImageList();
-        if(CollUtil.isNotEmpty(imageList)){
+        if (CollUtil.isNotEmpty(imageList)) {
             imageList.forEach(item -> item.setTreadsId(treadsId));
             // 保存图片
             imageService.saveBatch(imageList);
@@ -80,9 +86,9 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         this.removeById(id);
 
         // 删除动态相关标签
-        treadsTagService.remove(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId,id));
+        treadsTagService.remove(new LambdaQueryWrapper<TreadsTag>().eq(TreadsTag::getTreadsId, id));
         // 删除动态相关图片
-        imageService.remove(new LambdaQueryWrapper<Image>().eq(Image::getTreadsId,id));
+        imageService.remove(new LambdaQueryWrapper<Image>().eq(Image::getTreadsId, id));
 
         return Result.success("删除成功");
     }
@@ -94,7 +100,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     }
 
     @Override
-    public Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery){
+    public Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery) {
         Page<Treads> treadsPage = this.page(
                 treadsPageQuery.toMpPageDefaultSortByCreateTimeDesc(),
                 new LambdaQueryWrapper<Treads>().eq(Treads::getUserId, treadsPageQuery.getUserId()));
@@ -113,8 +119,8 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         // 获取动态
         if (userId == null) {
-            treadsList =  this.list();
-        }else {
+            treadsList = this.list();
+        } else {
             treadsList = this.list(new LambdaQueryWrapper<Treads>().eq(Treads::getUserId, userId));
         }
 
@@ -137,7 +143,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
                 .map(this::getTreadsVo)
                 .toList();
 
-        return Result.success(PageUtils.of(treadsPage,treadsVos));
+        return Result.success(PageUtils.of(treadsPage, treadsVos));
     }
 
     @Override
@@ -149,10 +155,10 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         Long treadsId = treadsDTO.getId();
 
         // 更新动态内容
-        this.update(updateWrapper.eq(Treads::getId,treadsId));
+        this.update(updateWrapper.eq(Treads::getId, treadsId));
 
         // 删除该动态的标签
-        treadsTagService.remove(queryWrapper.eq(TreadsTag::getTreadsId,treadsId));
+        treadsTagService.remove(queryWrapper.eq(TreadsTag::getTreadsId, treadsId));
 
         // 获取该动态的新标签
         List<TreadsTag> treadsTagList = treadsDTO.getTreadsTagList();
@@ -170,10 +176,11 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
     /**
      * 将 组合 TreadsVo 抽象出为一个方法
+     *
      * @param treads 动态
      * @return treadsVo
      */
-    private TreadsVo getTreadsVo(Treads treads){
+    private TreadsVo getTreadsVo(Treads treads) {
         long userId = BaseContext.getCurrentId();
 
         // 获取该动态的标签id
@@ -185,7 +192,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 根据id获取标签内容
         if (CollUtil.isNotEmpty(tagsId)) {
             tags = tagService.listByIds(tagsId);
-        }else {
+        } else {
             tags = Collections.emptyList();
         }
 
@@ -208,7 +215,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 获取点赞数
         long supportNum = supportService.count(supportLambdaQueryWrapper.eq(Support::getTreadsId, id));
         // 是否点赞
-        boolean isSupport = supportService.exists(supportLambdaQueryWrapper.eq(Support::getTreadsId, id).eq(Support::getUserId,userId));
+        boolean isSupport = supportService.exists(supportLambdaQueryWrapper.eq(Support::getTreadsId, id).eq(Support::getUserId, userId));
 
         // 转换为vo
         TreadsVo treadsVo = BeanUtil.copyProperties(treads, TreadsVo.class);
@@ -234,10 +241,36 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     public Result<String> cancelSupport(Support support) {
         supportService.remove(
                 new LambdaQueryWrapper<Support>()
-                .eq(Support::getTreadsId,support.getTreadsId())
-                .eq(Support::getUserId,support.getUserId())
+                        .eq(Support::getTreadsId, support.getTreadsId())
+                        .eq(Support::getUserId, support.getUserId())
         );
         return Result.success("取消点赞成功");
+    }
+
+    @Override
+    public List<TreadsVo> getCurrentHotTreads() {
+        long timestamp = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000;
+        LocalDateTime localDateTimeBefore = Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.ofHours(8)).toLocalDateTime();
+
+        List<Treads> treadsList = this.lambdaQuery()
+                .le(Treads::getCreateTime, LocalDateTime.now())
+                .ge(Treads::getCreateTime, localDateTimeBefore)
+                .list();
+
+        Map<Long, Long> currentMaxSupportNum = supportService.getCurrentMaxSupportNum(treadsList.stream().map(Treads::getId).toList());
+
+        List<TreadsVo> treadsVos = new ArrayList<>();
+
+        treadsList.forEach(item -> {
+            Long supportNum = currentMaxSupportNum.get(item.getId());
+            if(supportNum != null){
+                TreadsVo treadsVo = BeanUtils.copyProperties(item, TreadsVo.class);
+                treadsVo.setSupportNum(supportNum);
+                treadsVos.add(treadsVo);
+            }
+        });
+
+        return treadsVos;
     }
 
 

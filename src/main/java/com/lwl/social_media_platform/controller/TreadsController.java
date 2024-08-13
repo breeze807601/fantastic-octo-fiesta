@@ -73,4 +73,9 @@ public class TreadsController {
     public Result<String> cancelSupport(Support support){
         return treadsService.cancelSupport(support);
     }
+
+    @GetMapping("/current-hot-treads")
+    public Result<List<TreadsVo>> getCurrentHotTreads(){
+        return Result.success(treadsService.getCurrentHotTreads());
+    }
 }
