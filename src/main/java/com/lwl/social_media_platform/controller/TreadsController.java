@@ -65,12 +65,17 @@ public class TreadsController {
     }
 
     @PostMapping("/support")
-    public Result<String> support(Support support){
+    public Result<String> support(@RequestBody Support support){
         return treadsService.support(support);
     }
 
     @PostMapping("/cancel")
-    public Result<String> cancelSupport(Support support){
+    public Result<String> cancelSupport(@RequestBody Support support){
         return treadsService.cancelSupport(support);
+    }
+
+    @GetMapping("/current-hot-treads")
+    public Result<List<TreadsVo>> getCurrentHotTreads(){
+        return Result.success(treadsService.getCurrentHotTreads());
     }
 }

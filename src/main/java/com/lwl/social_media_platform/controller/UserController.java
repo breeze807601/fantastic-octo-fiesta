@@ -65,17 +65,16 @@ public class UserController {
         UserVo userVo = userService.getUserById(id);
         Long currentUserId = BaseContext.getCurrentId();
 
-        LambdaQueryWrapper<Concentration> wrapper = new LambdaQueryWrapper<>();
 
-        Concentration isFollow = concentrationService.getOne(
-                wrapper.eq(Concentration::getUserId, currentUserId)
-                        .eq(Concentration::getToUserId, userVo.getId())
-        );
+        boolean isFollow = concentrationService.lambdaQuery()
+                .eq(Concentration::getUserId, currentUserId)
+                .eq(Concentration::getToUserId, userVo.getId())
+                .exists();
 
-        long followCount = concentrationService.getToConcentrationNum(userVo.getId());
-        long fansCount = concentrationService.getConcentrationNum(userVo.getId());
+        long followCount = concentrationService.getConcentrationNum(userVo.getId());
+        long fansCount = concentrationService.getFansNum(userVo.getId());
 
-        userVo.setIsFollow(isFollow != null)
+        userVo.setIsFollow(isFollow)
                 .setFansNum(fansCount)
                 .setFollowNum(followCount);
 
