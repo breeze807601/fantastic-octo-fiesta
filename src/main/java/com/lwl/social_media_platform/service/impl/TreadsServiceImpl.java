@@ -200,10 +200,10 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 获取动态作者id
         long toUserId = treads.getUserId();
         // 是否关注
-        Concentration concentration = concentrationService.lambdaQuery()
+        boolean concentration = concentrationService.lambdaQuery()
                 .eq(userId != null, Concentration::getUserId, userId)
                 .eq(userId != null,Concentration::getToUserId, toUserId)
-                .getEntity();
+                .exists();
 
         // 获取动态作者
         User user = userService.getById(toUserId);
@@ -219,7 +219,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         // 设置标签 图片url 是否关注 点赞数 已点赞
         treadsVo.setTagList(tags)
                 .setImageList(imageList)
-                .setIsFollow(concentration != null)
+                .setIsFollow(concentration)
                 .setSupportNum(supportNum)
                 .setNickName(user.getUsername())
                 .setPic(user.getPic())

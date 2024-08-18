@@ -2,6 +2,9 @@ package com.lwl.social_media_platform.domain.vo;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
+
 @Data
 @Accessors(chain = true)
 public class UserConcentrationVo {
@@ -11,4 +14,5 @@ public class UserConcentrationVo {
     private String nickname;
     private String sex;
     private Boolean isFollow;
+    private LocalDateTime createTime;
 }
