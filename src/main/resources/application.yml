@@ -11,6 +11,11 @@ spring:
             port: 6379
             password: 1234567
             host: 192.168.16.128
+    elasticsearch:
+        uris: http://localhost:9200
+        connection-timeout: 1s
+        socket-timeout: 30s
+
 mybatis-plus:
     configuration:
         map-underscore-to-camel-case: true
