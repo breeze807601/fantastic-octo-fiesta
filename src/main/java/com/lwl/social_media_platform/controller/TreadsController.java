@@ -45,7 +45,7 @@ public class TreadsController {
 
     @GetMapping("/list")
     public Result<List<TreadsVo>> getTreadsList(@RequestParam(name="id",required = false) Long userId){
-        return treadsService.getTreadsList(userId);
+        return Result.error("该接口已过期");
     }
 
     /**

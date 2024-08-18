@@ -1,6 +1,7 @@
 package com.lwl.social_media_platform.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -18,16 +19,16 @@ import com.lwl.social_media_platform.service.*;
 import com.lwl.social_media_platform.utils.BeanUtils;
 import com.lwl.social_media_platform.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static com.lwl.social_media_platform.utils.RedisConstant.TREADS_VO_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +39,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     private final ConcentrationService concentrationService;
     private final SupportService supportService;
     private final UserService userService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     @Transactional
@@ -94,8 +96,23 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
     @Override
     public Result<TreadsVo> getTread(Long id) {
+        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(TREADS_VO_KEY + id);
+        if (!entries.isEmpty()) {
+            TreadsVo treadsVo = BeanUtils.fillBeanWithMap(entries, new TreadsVo(), false);
+            return Result.success(treadsVo);
+        }
+
         Treads treads = this.getById(id);
-        return Result.success(getTreadsVo(treads));// 调用 getTreadsVo 方法 返回 TreadsVo
+        TreadsVo treadsVo = getTreadsVo(treads);
+
+        Map<String, Object> stringObjectMap = BeanUtils.beanToMap(treadsVo, new HashMap<>(),
+                CopyOptions.create()
+                        .setIgnoreNullValue(true)
+                        .setFieldValueEditor((name, value) -> value.toString()));
+
+        stringRedisTemplate.opsForHash().putAll(TREADS_VO_KEY + treadsVo.getId(), stringObjectMap);
+
+        return Result.success(treadsVo);// 调用 getTreadsVo 方法 返回 TreadsVo
     }
 
     @Override
@@ -111,26 +128,12 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         return Result.success(treadsVoPage);
     }
 
-
     @Override
+    @Deprecated
     public Result<List<TreadsVo>> getTreadsList(Long userId) {
-
-        List<Treads> treadsList;
-
-        // 获取动态
-        if (userId == null) {
-            treadsList = this.list();
-        } else {
-            treadsList = this.lambdaQuery().eq(Treads::getUserId, userId).list();
-        }
-
-        // 将每个 Treads 转换成 TreadsVo
-        List<TreadsVo> treadsVoList = treadsList.stream()
-                .map(this::getTreadsVo)
-                .toList();
-
-        return Result.success(treadsVoList);
+        return Result.error("该接口已过期");
     }
+
 
     @Override
     public Result<PageDTO<TreadsVo>> getTreadsPage(TreadsPageQuery treadsPageQuery) {
@@ -172,61 +175,6 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     }
 
 
-    /**
-     * 将 组合 TreadsVo 抽象出为一个方法
-     *
-     * @param treads 动态
-     * @return treadsVo
-     */
-    private TreadsVo getTreadsVo(Treads treads) {
-        Long userId = BaseContext.getCurrentId();
-
-        // 获取该动态的标签id
-        Long id = treads.getId();
-        List<TreadsTag> treadsTags = treadsTagService.lambdaQuery().eq(TreadsTag::getTreadsId, id).list();
-        // 取出标签id
-        List<Long> tagsId = treadsTags.stream().map(TreadsTag::getTagId).toList();
-        List<Tag> tags;
-        // 根据id获取标签内容
-        if (CollUtil.isNotEmpty(tagsId)) {
-            tags = tagService.listByIds(tagsId);
-        } else {
-            tags = Collections.emptyList();
-        }
-
-        // 获取图片url
-        List<Image> imageList = imageService.lambdaQuery().eq(Image::getTreadsId, id).list();
-
-        // 获取动态作者id
-        long toUserId = treads.getUserId();
-        // 是否关注
-        boolean concentration = concentrationService.lambdaQuery()
-                .eq(userId != null, Concentration::getUserId, userId)
-                .eq(userId != null,Concentration::getToUserId, toUserId)
-                .exists();
-
-        // 获取动态作者
-        User user = userService.getById(toUserId);
-
-        LambdaQueryWrapper<Support> supportLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        // 获取点赞数
-        long supportNum = supportService.count(supportLambdaQueryWrapper.eq(Support::getTreadsId, id));
-        // 是否点赞
-        boolean isSupport = supportService.exists(supportLambdaQueryWrapper.eq(Support::getTreadsId, id).eq(Support::getUserId, userId));
-
-        // 转换为vo
-        TreadsVo treadsVo = BeanUtil.copyProperties(treads, TreadsVo.class);
-        // 设置标签 图片url 是否关注 点赞数 已点赞
-        treadsVo.setTagList(tags)
-                .setImageList(imageList)
-                .setIsFollow(concentration)
-                .setSupportNum(supportNum)
-                .setNickName(user.getUsername())
-                .setPic(user.getPic())
-                .setIsSupport(isSupport);
-
-        return treadsVo;
-    }
 
     @Override
     public Result<String> support(Support support) {
@@ -268,4 +216,61 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         return treadsVos;
     }
+
+    /**
+     * 将 组合 TreadsVo 抽象出为一个方法
+     *
+     * @param treads 动态
+     * @return treadsVo
+     */
+    private TreadsVo getTreadsVo(Treads treads) {
+        Long userId = BaseContext.getCurrentId();
+
+        // 获取该动态的标签id
+        Long id = treads.getId();
+        List<TreadsTag> treadsTags = treadsTagService.lambdaQuery().eq(TreadsTag::getTreadsId, id).list();
+        // 取出标签id
+        List<Long> tagsId = treadsTags.stream().map(TreadsTag::getTagId).toList();
+        List<Tag> tags;
+        // 根据id获取标签内容
+        if (CollUtil.isNotEmpty(tagsId)) {
+            tags = tagService.listByIds(tagsId);
+        } else {
+            tags = Collections.emptyList();
+        }
+
+        // 获取图片url
+        List<Image> imageList = imageService.lambdaQuery().eq(Image::getTreadsId, id).list();
+
+        // 获取动态作者id
+        long toUserId = treads.getUserId();
+        // 是否关注
+        boolean concentration = concentrationService.lambdaQuery()
+                .eq(userId != null, Concentration::getUserId, userId)
+                .eq(userId != null, Concentration::getToUserId, toUserId)
+                .exists();
+
+        // 获取动态作者
+        User user = userService.getById(toUserId);
+
+        LambdaQueryWrapper<Support> supportLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // 获取点赞数
+        long supportNum = supportService.count(supportLambdaQueryWrapper.eq(Support::getTreadsId, id));
+        // 是否点赞
+        boolean isSupport = supportService.exists(supportLambdaQueryWrapper.eq(Support::getTreadsId, id).eq(Support::getUserId, userId));
+
+        // 转换为vo
+        TreadsVo treadsVo = BeanUtil.copyProperties(treads, TreadsVo.class);
+        // 设置标签 图片url 是否关注 点赞数 已点赞
+        treadsVo.setTagList(tags)
+                .setImageList(imageList)
+                .setIsFollow(concentration)
+                .setSupportNum(supportNum)
+                .setNickName(user.getUsername())
+                .setPic(user.getPic())
+                .setIsSupport(isSupport);
+
+        return treadsVo;
+    }
+
 }

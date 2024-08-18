@@ -20,6 +20,7 @@ public interface TreadsService extends IService<Treads> {
 
     Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery);
 
+    @Deprecated
     Result<List<TreadsVo>> getTreadsList(Long userId);
 
     Result<PageDTO<TreadsVo>> getTreadsPage(TreadsPageQuery treadsPageQuery);

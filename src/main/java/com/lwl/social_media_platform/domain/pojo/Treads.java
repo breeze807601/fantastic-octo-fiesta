@@ -9,8 +9,6 @@ public class Treads {
     private Long id;
     private Long userId;
     private String content;
-//    private Integer supportCount;
-//    private Integer treadCount;
     private String state;
     private LocalDateTime createTime;
 }
