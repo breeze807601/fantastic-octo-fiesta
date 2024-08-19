@@ -23,3 +23,13 @@ mybatis-plus:
     global-config:
         db-config:
             id-type: ASSIGN_ID
+rocketmq:
+    name-server: 127.0.0.1:9876
+    producer:
+        group: treads-save_pg
+        topic: treads_topic
+        send-message-timeout: 2000
+        retry-times-when-send-failed: 1
+        retry-times-when-send-async-failed: 1
+    consumer:
+        group: treads_cg
