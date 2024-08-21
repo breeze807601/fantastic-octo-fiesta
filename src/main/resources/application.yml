@@ -1,0 +1,35 @@
+server:
+    port: 4090
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/social_media_platform?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+        username: root
+        password: 1234567
+    data:
+        redis:
+            port: 6379
+            password: 1234567
+            host: 192.168.16.128
+    elasticsearch:
+        uris: http://localhost:9200
+        connection-timeout: 1s
+        socket-timeout: 30s
+
+mybatis-plus:
+    configuration:
+        map-underscore-to-camel-case: true
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    global-config:
+        db-config:
+            id-type: ASSIGN_ID
+rocketmq:
+    name-server: 127.0.0.1:9876
+    producer:
+        group: treads-save_pg
+        topic: treads_topic
+        send-message-timeout: 2000
+        retry-times-when-send-failed: 1
+        retry-times-when-send-async-failed: 1
+    consumer:
+        group: treads_cg
