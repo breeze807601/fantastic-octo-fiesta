@@ -25,11 +25,11 @@ public class TreadsProducer {
     @Value("${rocketmq.producer.topic}")
     private String topic;
 
-    public void sendMessage(String treadsJSON) {
+    public void sendMessage(String treadsDtoJSON) {
         String keys = UUID.randomUUID().toString();
         Map<String, String> keyMap = new HashMap<>();
         keyMap.put("keys", keys);
-        keyMap.put("treadsJSON",treadsJSON);
+        keyMap.put("treadsDtoJSON",treadsDtoJSON);
         Message<Map<String, String>> build = MessageBuilder
                 .withPayload(keyMap)
                 .setHeader(MessageConst.PROPERTY_KEYS, keys)

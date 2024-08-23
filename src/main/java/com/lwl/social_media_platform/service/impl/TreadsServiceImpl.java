@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -15,14 +16,25 @@ import com.lwl.social_media_platform.domain.pojo.*;
 import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
 import com.lwl.social_media_platform.domain.vo.TreadsVo;
 import com.lwl.social_media_platform.mapper.TreadsMapper;
+import com.lwl.social_media_platform.mq.TreadsProducer;
 import com.lwl.social_media_platform.service.*;
 import com.lwl.social_media_platform.utils.BeanUtils;
+import com.lwl.social_media_platform.utils.ESClientUtil;
 import com.lwl.social_media_platform.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -31,6 +43,7 @@ import java.util.*;
 import static com.lwl.social_media_platform.utils.RedisConstant.TREADS_VO_KEY;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> implements TreadsService {
     private final TagService tagService;
@@ -40,6 +53,9 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     private final SupportService supportService;
     private final UserService userService;
     private final StringRedisTemplate stringRedisTemplate;
+    private final ESClientUtil esClientUtil;
+    private final TreadsProducer treadsProducer;
+    private final RestHighLevelClient restHighLevelClient;
 
     @Override
     @Transactional
@@ -77,6 +93,8 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
             imageService.saveBatch(imageList);
         }
 
+        treadsProducer.sendMessage(JSONUtil.toJsonStr(treadsDTO));
+
         return Result.success("发布成功");
     }
 
@@ -90,6 +108,8 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         treadsTagService.lambdaUpdate().eq(TreadsTag::getTreadsId, id).remove();
         // 删除动态相关图片
         imageService.lambdaUpdate().eq(Image::getTreadsId, id).remove();
+        // 从es中删除该动态的文档
+        esClientUtil.deleteDoc("treads-vo", id.toString());
 
         return Result.success("删除成功");
     }
@@ -116,16 +136,59 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
     }
 
     @Override
-    public Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery) {
-        Page<Treads> treadsPage = this.lambdaQuery()
-                .eq(Treads::getUserId, treadsPageQuery.getUserId())
-                .page(treadsPageQuery.toMpPageDefaultSortByCreateTimeDesc());
+    public Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery) throws IOException {
+        Long userId = BaseContext.getCurrentId();
 
-        List<Treads> treadsList = treadsPage.getRecords();
-        List<TreadsVo> treadsVoList = treadsList.stream().map(this::getTreadsVo).toList();
-        PageDTO<TreadsVo> treadsVoPage = PageUtils.of(treadsPage, treadsVoList);
+        // 构造查询条件
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
+                // 起始页
+                .from(treadsPageQuery.getPageNo())
+                // 每页数量
+                .size(treadsPageQuery.getPageSize())
+                // 指定查询用户id字段
+                .query(QueryBuilders.matchQuery("userId", treadsPageQuery.getUserId().toString()));
+        SearchRequest searchRequest = new SearchRequest("treads-vo").source(searchSourceBuilder);
 
-        return Result.success(treadsVoPage);
+        // 聚合查询
+        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+
+        // 转化为treadsVo
+        List<TreadsVo> treadsVoList = new ArrayList<>();
+        for (SearchHit hit :
+                searchResponse.getHits().getHits()) {
+            Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+
+            TreadsVo treadsVo = BeanUtils.mapToBean(sourceAsMap, TreadsVo.class, true, CopyOptions.create());
+            // 获取动态作者id
+            long toUserId = treadsVo.getUserId();
+            // 是否关注
+            boolean concentration = concentrationService.lambdaQuery()
+                    .eq(userId != null, Concentration::getUserId, userId)
+                    .eq(userId != null, Concentration::getToUserId, toUserId)
+                    .exists();
+
+            // 动态id
+            Long id = treadsVo.getId();
+
+            LambdaQueryWrapper<Support> supportLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            // 获取点赞数
+            long supportNum = supportService.count(supportLambdaQueryWrapper.eq(Support::getTreadsId, id));
+            // 是否点赞
+            boolean isSupport = supportService.exists(supportLambdaQueryWrapper.eq(Support::getTreadsId, id).eq(Support::getUserId, userId));
+
+            treadsVo.setIsFollow(concentration)
+                    .setSupportNum(supportNum)
+                    .setIsSupport(isSupport);
+
+            treadsVoList.add(treadsVo);
+        }
+
+        PageDTO<TreadsVo> treadsVoPageDTO = new PageDTO<>();
+        treadsVoPageDTO.setList(treadsVoList)
+                .setPages(Integer.toUnsignedLong(treadsPageQuery.getPageSize()))
+                .setTotal(searchResponse.getHits().getTotalHits().value);
+
+        return Result.success(treadsVoPageDTO);
     }
 
     @Override
@@ -173,7 +236,6 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
 
         return Result.success("更新成功");
     }
-
 
 
     @Override

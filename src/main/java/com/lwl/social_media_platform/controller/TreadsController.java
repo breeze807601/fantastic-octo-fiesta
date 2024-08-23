@@ -11,6 +11,7 @@ import com.lwl.social_media_platform.service.TreadsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -34,7 +35,7 @@ public class TreadsController {
         return treadsService.getTread(id);
     }
     @GetMapping("/getByUser")
-    public Result<PageDTO<TreadsVo>> getTreadsByUser(TreadsPageQuery treadsPageQuery){
+    public Result<PageDTO<TreadsVo>> getTreadsByUser(TreadsPageQuery treadsPageQuery) throws IOException {
         return treadsService.getTreadByUserId(treadsPageQuery);
     }
 
