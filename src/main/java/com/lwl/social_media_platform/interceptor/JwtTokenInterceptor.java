@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.lwl.social_media_platform.utils.RedisConstant.USER_LOGIN_KEY;
 
 @Component
@@ -26,9 +28,10 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
 
     /**
      * 基于redis的token检验
+     *
      * @param request  request
      * @param response response
-     * @param handler handler
+     * @param handler  handler
      * @return boolean
      * @throws Exception exception
      */
@@ -44,10 +47,11 @@ public class JwtTokenInterceptor implements HandlerInterceptor {
         String userStr = stringRedisTemplate.opsForValue().get(USER_LOGIN_KEY + token);
         if (StrUtil.isBlank(userStr)) {
             throw new LoginException("token令牌已过期或用户未登录");
-        }else {
+        } else {
             UserLoginVo userLoginVo = JSONUtil.toBean(userStr, UserLoginVo.class);
             Long id = userLoginVo.getUser().getId();
             BaseContext.setCurrentId(id);
+            stringRedisTemplate.expire(USER_LOGIN_KEY + token, 30, TimeUnit.MINUTES);
             return true;
         }
     }
