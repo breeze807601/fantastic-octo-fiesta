@@ -9,6 +9,7 @@ import com.lwl.social_media_platform.domain.dto.TreadsDTO;
 import com.lwl.social_media_platform.domain.query.TreadsPageQuery;
 import com.lwl.social_media_platform.domain.vo.TreadsVo;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface TreadsService extends IService<Treads> {
@@ -18,7 +19,7 @@ public interface TreadsService extends IService<Treads> {
 
     Result<TreadsVo> getTread(Long id);
 
-    Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery);
+    Result<PageDTO<TreadsVo>> getTreadByUserId(TreadsPageQuery treadsPageQuery) throws IOException;
 
     @Deprecated
     Result<List<TreadsVo>> getTreadsList(Long userId);
