@@ -102,7 +102,7 @@ public class ESClientUtil {
         for (String field :
                 arrayField) {
             mappingBuilder.startObject(field)
-                    .field("type", "keyword")
+                    .field("type", "array")
                     .endObject();
         }
         for (String filed : fieldList) {
