@@ -153,7 +153,7 @@ public class TreadsServiceImpl extends ServiceImpl<TreadsMapper, Treads> impleme
         Long treadsId = treadsDTO.getId();
 
         // 更新动态内容
-        this.lambdaUpdate().eq(Treads::getId, treadsId).update();
+        this.lambdaUpdate().eq(Treads::getId, treadsId).update(treadsDTO);
 
         // 删除该动态的标签
         treadsTagService.lambdaUpdate().eq(TreadsTag::getTreadsId, treadsId).remove();
